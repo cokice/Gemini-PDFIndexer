@@ -102,7 +102,7 @@ def process_single_file(args):
                     
                     # 回退到文本提取
                     text = chunker.extract_text_from_chunk(chunk_bytes)
-                    toc_entries = extractor.extract_titles_from_text(text, start_page)
+                    toc_entries = extractor.extract_titles_from_text(text, start_page, end_page)
                 
                 all_toc_entries.append(toc_entries)
                 

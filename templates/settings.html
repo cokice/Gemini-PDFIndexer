@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设置 - Gemini PDF Indexer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 3rem;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .header {
+            margin-bottom: 2rem;
+        }
+        
+        h1 {
+            color: #4a5568;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: #718096;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        input[type="password"], input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        input[type="password"]:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        
+        .alert-info {
+            background: #bee3f8;
+            color: #2c5282;
+            border: 1px solid #90cdf4;
+        }
+        
+        .alert-danger {
+            background: #fed7d7;
+            color: #c53030;
+            border: 1px solid #feb2b2;
+        }
+        
+        .help-text {
+            font-size: 0.9rem;
+            color: #718096;
+            margin-top: 0.5rem;
+        }
+        
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .status-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .status-label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        .status-value {
+            color: #718096;
+        }
+        
+        .status-good {
+            color: #48bb78;
+            font-weight: 600;
+        }
+        
+        .status-warning {
+            color: #ed8936;
+            font-weight: 600;
+        }
+        
+        .nav-links {
+            margin-top: 2rem;
+        }
+        
+        .nav-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: #f8f9fa;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+            margin: 0.25rem;
+        }
+        
+        .nav-link:hover {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ 系统设置</h1>
+            <p class="subtitle">Gemini API Key 配置</p>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="status-card">
+            <h3 style="margin-bottom: 1rem; color: #4a5568;">API Key 状态</h3>
+            <div class="status-item">
+                <span class="status-label">环境变量 (GOOGLE_AI_API_KEY):</span>
+                <span class="status-value {{ 'status-good' if env_api_key else 'status-warning' }}">
+                    {{ '✅ 已配置' if env_api_key else '❌ 未配置' }}
+                </span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">自定义 API Key:</span>
+                <span class="status-value {{ 'status-good' if custom_api_key else 'status-warning' }}">
+                    {{ '✅ 已设置' if custom_api_key else '❌ 未设置' }}
+                </span>
+            </div>
+        </div>
+        
+        <form method="POST" action="/save_settings">
+            <div class="form-group">
+                <label for="custom_api_key">自定义 Gemini API Key</label>
+                <input type="password" id="custom_api_key" name="custom_api_key" 
+                       value="{{ custom_api_key if custom_api_key else '' }}" 
+                       placeholder="输入您的 Gemini API Key（可选）">
+                <div class="help-text">
+                    如果设置，将覆盖环境变量中的API Key。留空则使用环境变量。<br>
+                    没有API Key？<a href="https://ai.google.dev/" target="_blank">点击这里获取</a>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn">💾 保存设置</button>
+        </form>
+        
+        {% if custom_api_key %}
+        <form method="POST" action="/save_settings">
+            <input type="hidden" name="custom_api_key" value="">
+            <button type="submit" class="btn btn-secondary">🗑️ 清除自定义 API Key</button>
+        </form>
+        {% endif %}
+        
+        <div class="nav-links">
+            <a href="/" class="nav-link">🏠 返回主页</a>
+        </div>
+    </div>
+    
+    <script>
+        // 显示/隐藏 API Key
+        function toggleApiKey() {
+            const input = document.getElementById('custom_api_key');
+            if (input.type === 'password') {
+                input.type = 'text';
+            } else {
+                input.type = 'password';
+            }
+        }
+        
+        // 添加显示/隐藏按钮（可选）
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('custom_api_key');
+            const container = input.parentElement;
+            
+            const toggleBtn = document.createElement('button');
+            toggleBtn.type = 'button';
+            toggleBtn.innerHTML = '👁️';
+            toggleBtn.style.position = 'absolute';
+            toggleBtn.style.right = '10px';
+            toggleBtn.style.top = '50%';
+            toggleBtn.style.transform = 'translateY(-50%)';
+            toggleBtn.style.background = 'none';
+            toggleBtn.style.border = 'none';
+            toggleBtn.style.cursor = 'pointer';
+            toggleBtn.onclick = toggleApiKey;
+            
+            input.style.paddingRight = '40px';
+            container.style.position = 'relative';
+            container.appendChild(toggleBtn);
+        });
+    </script>
+</body>
+</html>

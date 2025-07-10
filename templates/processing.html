@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>处理中 - Gemini PDF Indexer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 3rem;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #4a5568;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .progress-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+        
+        .progress-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+        }
+        
+        .status-message {
+            color: #718096;
+            font-size: 1rem;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0.5rem;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+        }
+        
+        .result-message {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border-radius: 10px;
+        }
+        
+        .success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            border: 1px solid #feb2b2;
+        }
+        
+        .actions {
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 PDF处理中</h1>
+        
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">0%</div>
+            <div class="status-message" id="statusMessage">
+                <span class="spinner" id="spinner"></span>
+                准备开始处理...
+            </div>
+        </div>
+        
+        <div id="resultMessage" class="result-message" style="display: none;"></div>
+        
+        <div class="actions" id="actions" style="display: none;">
+            <a href="/download/{{ task_id }}" class="btn btn-success" id="downloadBtn" style="display: none;">
+                📥 下载处理后的PDF
+            </a>
+            <a href="/" class="btn">🔄 处理新文件</a>
+            <a href="/cleanup/{{ task_id }}" class="btn btn-danger" id="cleanupBtn">
+                🗑️ 清理文件
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        const taskId = '{{ task_id }}';
+        let pollInterval;
+        
+        function updateProgress(data) {
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const statusMessage = document.getElementById('statusMessage');
+            const resultMessage = document.getElementById('resultMessage');
+            const actions = document.getElementById('actions');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const spinner = document.getElementById('spinner');
+            
+            // 更新进度条
+            const progress = data.progress || 0;
+            progressFill.style.width = progress + '%';
+            progressText.textContent = progress + '%';
+            
+            // 更新状态消息
+            statusMessage.innerHTML = `<span class="spinner" id="spinner"></span>${data.message || '处理中...'}`;
+            
+            if (data.status === 'completed') {
+                // 处理完成
+                spinner.style.display = 'none';
+                statusMessage.innerHTML = '✅ ' + data.message;
+                resultMessage.className = 'result-message success';
+                resultMessage.textContent = '🎉 PDF处理完成！您可以下载带有书签的新文件。';
+                resultMessage.style.display = 'block';
+                actions.style.display = 'block';
+                downloadBtn.style.display = 'inline-block';
+                clearInterval(pollInterval);
+            } else if (data.status === 'error') {
+                // 处理失败
+                spinner.style.display = 'none';
+                statusMessage.innerHTML = '❌ ' + data.message;
+                resultMessage.className = 'result-message error';
+                resultMessage.textContent = '😞 处理失败：' + data.message;
+                resultMessage.style.display = 'block';
+                actions.style.display = 'block';
+                clearInterval(pollInterval);
+            }
+        }
+        
+        function pollStatus() {
+            fetch(`/status/${taskId}`)
+                .then(response => response.json())
+                .then(data => {
+                    updateProgress(data);
+                })
+                .catch(error => {
+                    console.error('获取状态失败:', error);
+                    clearInterval(pollInterval);
+                    document.getElementById('statusMessage').innerHTML = '❌ 无法获取处理状态';
+                });
+        }
+        
+        // 开始轮询状态
+        pollStatus(); // 立即检查一次
+        pollInterval = setInterval(pollStatus, 2000); // 每2秒检查一次
+        
+        // 页面关闭时清理
+        window.addEventListener('beforeunload', function() {
+            if (pollInterval) {
+                clearInterval(pollInterval);
+            }
+        });
+    </script>
+</body>
+</html>
